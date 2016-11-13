@@ -1,10 +1,12 @@
 import React, { Component, } from 'react';
 import { AppRegistry, Dimensions, StyleSheet, Text, View, StatusBar,PanResponder, Animated } from 'react-native';
-import Svg, { Text as SvgText,} from 'react-native-svg'
+import Svg, { Text as SvgText, Rect} from 'react-native-svg'
 
 const letters = 'abcdefghijklmnopqrstuvwxyz'.split('')
 
-//todo: use Dimensions to add individual rows of components or find some react layout because you can't drag verticallt 
+
+let word = "dog"
+
 class Letter extends Component {
   render() {
     return (
@@ -13,6 +15,14 @@ class Letter extends Component {
   }
 }
 
+class LetterReceiver extends Component
+{
+  render() {
+    return (
+     <Svg height="100" width="80"><Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red"><SvgText stroke="purple" fontSize="20" fontWeight="bold"></SvgText></Rect></Svg>
+    )
+  }
+}
 
 const initialState = {
   absoluteChangeX: 0,
@@ -71,107 +81,20 @@ class DraggableView extends React.Component {
     });
   }
 
+  getStyle = () => {
+    return { zIndex: 10, transform: this.state.pan.getTranslateTransform() }
+  }
+
   render() {
     return (
       <Animated.View
         {...this.state.panResponder.panHandlers}
-        style={this.state.pan.getLayout()}>
+        style={this.getStyle()}>
         {this.props.children}
       </Animated.View>
     );
   }
 }
-
-// const initialState = {
-//   absoluteChangeX: 0,
-//   absoluteChangeY: 0,
-//   changeX: 0,
-//   changeY: 0
-// };
-
-// class PannableLetter extends Component {
-//   constructor(props, context) {
-//     super(props, context);
-//     this.lastX = 0;
-//     this.lastY = 0;
-//     this.absoluteChangeY = 0;
-//     this.absoluteChangeX = 0;
-//     this.state = Object.assign({}, initialState, {transform: new Animated.ValueXY()});
-//   }
-
-//   componentWillMount() {
-//     this.panResponder = PanResponder.create({
-//       onStartShouldSetPanResponder: ({ nativeEvent: { touches } }, { x0, y0 }) => {
-//         const shouldSet = touches.length === 1;
-//         if (shouldSet) {
-//           const { onPanBegin } = this.props;
-//           onPanBegin && onPanBegin({ // eslint-disable-line no-unused-expressions
-//             originX: x0,
-//             originY: y0
-//           });
-//         }
-//         return shouldSet;
-//       },
-//       onMoveShouldSetPanResponder: ({ nativeEvent: { touches } }) => {
-//         return touches.length === 1;
-//       },
-//       onPanResponderMove: (evt, { dx, dy }) => {
-//         const { onPan } = this.props;
-//         const panState = {
-//           absoluteChangeX: this.lastX + dx,
-//           absoluteChangeY: this.lastY + dy,
-//           changeX: dx,
-//           changeY: dy
-//         };
-
-//         onPan && onPan(panState); // eslint-disable-line no-unused-expressions
-
-//         this.absoluteChangeX = panState.absoluteChangeX;
-//         this.absoluteChangeY = panState.absoluteChangeY;
-//         if (setGestureState) {
-//           this.setState(panState);
-//         }
-//       },
-
-//       onPanResponderTerminationRequest: () => true,
-//       // onPanResponderTerminate: this.handlePanResponderRelease,
-//       // onPanResponderRelease: this.handlePanResponderRelease
-//     });
-//   }
-
-//   // handlePanResponderRelease = () => {
-//   //   console.log(12341234);
-//   //   debugger;
-//   //   // const { onPanEnd } = this.props;
-//   //   // this.lastX = this.absoluteChangeX;
-//   //   // this.lastY = this.absoluteChangeY;
-//   //   // onPanEnd && onPanEnd(); // eslint-disable-line no-unused-expressions
-//   // }
-
-//   render() {
-//     const {
-//       onPanBegin,
-//       onPan,
-//       onPanEnd,
-//       resetPan,
-//       panDecoratorStyle,
-//       ...props
-//     } = this.props;
-
-//     const style = {
-//       ...panDecoratorStyle,
-//       alignSelf: 'flex-start'
-//     };
-
-//     return (
-//       <Animated.View {...this.panResponder.panHandlers} style={style}>
-//         <Letter {...props} {...this.state} />
-//       </Animated.View>
-//     );
-//   }
-// }
-
-
 
 export default class wordmatch extends Component {
   render() {
@@ -179,9 +102,14 @@ export default class wordmatch extends Component {
       <View style={styles.container}>
         <View style={styles.lettersContainer}>
           {letters.map(letter => (
-            <DraggableView>
-            <Letter value={letter} key={letter} />
+            <DraggableView key={letter}>
+            <Letter value={letter} />
             </DraggableView>
+          ))}
+        </View>
+        <View style={styles.letterReceiversContainer}>
+          {word.split("").map(letter => (
+            <LetterReceiver value={letter} key={letter} />
           ))}
         </View>
       </View>
@@ -204,6 +132,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
+  },
+  letterReceiversContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,    
   }
 });
 
