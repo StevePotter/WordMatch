@@ -16,14 +16,6 @@ dropzones = []
 
 
 
-class Letter extends Component {
-  render() {
-    return (
-     <Svg height="50" width="50"><SvgText stroke="purple" fontSize="20" fontWeight="bold">{this.props.value.toUpperCase()}</SvgText></Svg>
-    );
-  }
-}
-
 
 //props: letter, index, dropzone, onLayoutChanged
 //status: empty, filled, highlighted
@@ -75,7 +67,7 @@ const initialState = {
   changeY: 0
 };
 
-class DraggableView extends React.Component {
+class DraggableLetter extends React.Component {
   constructor(props) {
     super(props);
     this.lastX = 0;
@@ -85,9 +77,6 @@ class DraggableView extends React.Component {
     this.state = Object.assign({}, initialState, {pan: new Animated.ValueXY()});
   }
   componentWillMount() {
-  //  this.state = {
-  //    pan: new Animated.ValueXY(), // inits to zero
-  //  };
     this.state.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => {
 //        console.log(dropzones);
@@ -123,17 +112,14 @@ class DraggableView extends React.Component {
           changeY: dy
         };
 
-        this.onPan(panState); // eslint-disable-line no-unused-expressions
+        this.state.pan.setValue({
+          x: absoluteChangeX,
+          y: absoluteChangeY,
+        });
         this.absoluteChangeX = panState.absoluteChangeX;
         this.absoluteChangeY = panState.absoluteChangeY;
-//        if (setGestureState) {
-          this.setState(panState);
-//        }
+        this.setState(panState);
       },      
-      // onPanResponderMove: Animated.event([null, {
-      //   dx: this.state.pan.x, // x,y are Animated.Value
-      //   dy: this.state.pan.y,
-      // }]),
       onPanResponderRelease: (evt, gestureState) => {
         console.log(this.props.letter);
         //https://facebook.github.io/react-native/docs/panresponder.html
@@ -171,12 +157,6 @@ class DraggableView extends React.Component {
     });
   }
   
-  onPan = ({ absoluteChangeX, absoluteChangeY }) => {
-    this.state.pan.setValue({
-      x: absoluteChangeX,
-      y: absoluteChangeY,
-    });
-  }
 
   getStyle = () => {
     return { zIndex: 10, transform: this.state.pan.getTranslateTransform() }
@@ -187,7 +167,7 @@ class DraggableView extends React.Component {
       <Animated.View
         {...this.state.panResponder.panHandlers}
         style={this.getStyle()}>
-        {this.props.children}
+         <Svg height="50" width="50"><SvgText stroke="purple" fontSize="20" fontWeight="bold">{this.props.letter.toUpperCase()}</SvgText></Svg>
       </Animated.View>
     );
   }
@@ -196,20 +176,18 @@ class DraggableView extends React.Component {
 class WordMatchUI extends Component {
   render() {
     return (
-        <View style={styles.container}>
-          <View style={styles.lettersContainer}>
-            {letters.map(letter => (
-              <DraggableView key={letter} letter={letter}>
-              <Letter value={letter} />
-              </DraggableView>
-            ))}
-          </View>
-          <View style={styles.LetterDropzonesContainer}>
-            {this.props.letterDrops.map((value) => (
-              <LetterDropzone letter={value.letter} key={value.index} index={value.index} status={value.status} />
-            ))}
-          </View>
+      <View style={styles.container}>
+        <View style={styles.lettersContainer}>
+          {letters.map(letter => (
+            <DraggableLetter key={letter} letter={letter} />
+          ))}
         </View>
+        <View style={styles.LetterDropzonesContainer}>
+          {this.props.letterDrops.map((value) => (
+            <LetterDropzone letter={value.letter} key={value.index} index={value.index} status={value.status} />
+          ))}
+        </View>
+      </View>
     );
   }
 }
