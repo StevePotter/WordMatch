@@ -1,16 +1,16 @@
-import React, { Component, } from 'react';
+import React, { Component } from 'react'
 import { AppRegistry, Dimensions, StyleSheet, Button, Text, View, StatusBar,PanResponder, Animated, UIManager, findNodeHandle } from 'react-native'
 import { connect, Provider } from 'react-redux'
-import Svg, { Text as SvgText, Rect, G, Line} from 'react-native-svg'
-import Rectangle from 'rectangle-node'//http://rahatah.me/rectangle-node/
-import store from "./store"
-import {wordChange as wordChangeAction, setDropZoneBounds as setDropZoneBoundsAction, 
-  moveInsideDropZone as moveInsideDropZoneAction, 
+import Svg, { Text as SvgText, Rect, G, Line } from 'react-native-svg'
+import Rectangle from 'rectangle-node'// http://rahatah.me/rectangle-node/
+import store from './store'
+import { wordChange as wordChangeAction, setDropZoneBounds as setDropZoneBoundsAction,
+  moveInsideDropZone as moveInsideDropZoneAction,
   moveOutsideDropZone as moveOutsideDropZoneAction,
   resolveStatus as resolveStatusAction,
   chooseNewWord as chooseNewWordAction,
-  releaseDropZone as releaseDropZoneAction } from "./actions"
-import Speech from "react-native-speech"
+  releaseDropZone as releaseDropZoneAction } from './actions'
+import Speech from 'react-native-speech'
 
 store.dispatch(chooseNewWordAction())
 
@@ -23,7 +23,7 @@ class App extends Component {
       <Provider store={store}>
         <RootScreen />
       </Provider>
-    );
+    )
   }
 }
 
@@ -33,16 +33,13 @@ Top level visible screen
 class RootScreenUI extends Component {
   render() {
     const status = this.props.status
-    if (status === 'started')
-    { 
+    if (status === 'started')    {
       return <View></View>
     }
-    if (status === 'playing')
-    {
+    if (status === 'playing')    {
       return <WordMatch />
     }
-    if (status === 'completed')
-    {
+    if (status === 'completed')    {
       return <CompletedUI />
     }
   }
@@ -76,17 +73,18 @@ class WordMatchUI extends Component {
 
   sayWord = () => {
     Speech.isSpeaking().then(speaking => {
-      if (speaking)
-        return;
-      let parts = this.props.word.split("")
-      parts.unshift(this.props.word)   
-      const sentence = parts.join("...")
+      if (speaking)        {
+        return
+      }
+      let parts = this.props.word.split('')
+      parts.unshift(this.props.word)
+      const sentence = parts.join('...')
       Speech.speak({
         text: sentence,
         voice: 'en-US'
       })
 
-    });
+    })
   }
 
   render() {
@@ -98,7 +96,7 @@ class WordMatchUI extends Component {
             <DraggableLetter key={letter} letter={letter} />
           ))}
         </View>
-        
+
         <View style={styles.playSoundContainer}>
           <Button title="Repeat" onPress={this.sayWord} />
         </View>
@@ -108,7 +106,7 @@ class WordMatchUI extends Component {
           ))}
         </View>
       </View>
-    );
+    )
   }
 }
 const WordMatch = connect(
@@ -122,20 +120,18 @@ One of the letters of the alphabet you can drag into a drop zone to complete the
 */
 class DraggableLetterUI extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { pan: new Animated.ValueXY()};
+    super(props)
+    this.state = { pan: new Animated.ValueXY(), isPanning: false }
   }
 
   findZoneForGesture(gestureState) {
-    const dropzones = this.props.letterDrops;
-    let pointerX = gestureState.x0 + gestureState.dx;
-    let pointerY = gestureState.y0 + gestureState.dy;
-    for(let i = 0; i < dropzones.length; i++)
-    {
-      var zone = dropzones[i];
-      if (zone.bounds && zone.bounds.contains(pointerX, pointerY))
-      {
-        return zone;
+    const dropzones = this.props.letterDrops
+    let pointerX = gestureState.x0 + gestureState.dx
+    let pointerY = gestureState.y0 + gestureState.dy
+    for(let i = 0; i < dropzones.length; i++)    {
+      var zone = dropzones[i]
+      if (zone.bounds && zone.bounds.contains(pointerX, pointerY))      {
+        return zone
       }
     }
   }
@@ -143,52 +139,50 @@ class DraggableLetterUI extends React.Component {
   componentWillMount() {
     this.state.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => {
+        this.setState(Object.assign(this.state, {isPanning: true}))
         return true
-      },      
+      },
       onPanResponderMove: (evt, gestureState) => {
         const zone = this.findZoneForGesture(gestureState)
-        if (zone)
-        {
+        if (zone) {
           store.dispatch(moveInsideDropZoneAction(zone.index))
+        } else {
+          store.dispatch(moveOutsideDropZoneAction())
         }
-        else
-        {
-          store.dispatch(moveOutsideDropZoneAction())          
-        }        
         this.state.pan.setValue({
           x: gestureState.dx,
-          y: gestureState.dy,
-        });
+          y: gestureState.dy
+        })
       },
       onPanResponderRelease: (evt, gestureState) => {
+        this.setState(Object.assign(this.state, {isPanning: false}))
         const zone = this.findZoneForGesture(gestureState)
         let animateBack = true
         if (zone) {
           const match = zone.letter === this.props.letter
-          store.dispatch(releaseDropZoneAction({ index: zone.index, match: match}))
-          if (match)
-          {
+          store.dispatch(releaseDropZoneAction({ index: zone.index, match: match }))
+          if (match)          {
             animateBack = false
             store.dispatch(resolveStatusAction())
           }
         }
-        if (animateBack)
-        {
+        if (animateBack)        {
           Animated.spring(
             this.state.pan,         // Auto-multiplexed
-            {toValue: {x: 0, y: 0}} // Back to zero
-          ).start();
-        }
-        else
-        {
-          this.state.pan.setValue({ x: 0,y: 0, });          
+            { toValue: { x: 0, y: 0 } } // Back to zero
+          ).start()
+        }        else        {
+          this.state.pan.setValue({ x: 0,y: 0 })
         }
       }
-    });
+    })
   }
 
   getStyle = () => {
-    return { zIndex: 10, transform: this.state.pan.getTranslateTransform() }
+    let transform = Array.from(this.state.pan.getTranslateTransform())
+    if (this.state.isPanning)
+      transform.push({scale: 2});
+    return { zIndex: 10, transform: transform }
   }
 
   render() {
@@ -196,7 +190,7 @@ class DraggableLetterUI extends React.Component {
       <Animated.View {...this.state.panResponder.panHandlers} style={this.getStyle()}>
          <Svg height="50" width="50"><SvgText stroke="purple" fontSize="20" fontWeight="bold">{this.props.letter.toUpperCase()}</SvgText></Svg>
       </Animated.View>
-    );
+    )
   }
 }
 
@@ -207,40 +201,34 @@ const DraggableLetter = connect(
 
 
 
-//props: letter, index, dropzone, onLayoutChanged
-//status: empty, filled, highlighted
+// props: letter, index, dropzone, onLayoutChanged
+// status: empty, filled, highlighted
 class LetterDropzone extends Component
 {
   constructor(props) {
-    super(props);
-    this.state = { renderTempIncorrect: true };
+    super(props)
+    this.state = { renderTempIncorrect: true }
   }
 
-  onLayout = ({nativeEvent}) =>
-  {
-    var view = this.refs['root'];
-    var handle = findNodeHandle(view);
-    UIManager.measure(handle, (x,y,width,height,pageX,pageY) =>
-    {
-      store.dispatch(setDropZoneBoundsAction({index: this.props.index, bounds: new Rectangle(pageX,pageY, width, height)}))
-    });
+  onLayout = ({ nativeEvent }) =>  {
+    var view = this.refs['root']
+    var handle = findNodeHandle(view)
+    UIManager.measure(handle, (x,y,width,height,pageX,pageY) =>    {
+      store.dispatch(setDropZoneBoundsAction({ index: this.props.index, bounds: new Rectangle(pageX,pageY, width, height) }))
+    })
   }
 
-  componentWillReceiveProps(nextProps)
-  {
-    if (nextProps.status === 'incorrect' && this.state.renderTempIncorrect)
-    {
-      setTimeout(() =>
-      {
+  componentWillReceiveProps(nextProps)  {
+    if (nextProps.status === 'incorrect' && this.state.renderTempIncorrect)    {
+      setTimeout(() =>      {
         this.setState({ renderTempIncorrect: false })
       },2000)
     }
   }
 
-  renderInside()
-  {
-    var height = 100;
-    var width = 80;
+  renderInside()  {
+    var height = 100
+    var width = 80
     switch(this.props.status) {
     case 'empty':
       return <Rect height={100} width={width} fill="white" strokeWidth="2" stroke="black"></Rect>
@@ -251,25 +239,22 @@ class LetterDropzone extends Component
           <SvgText x="20" y="20" textAnchor="middle" stroke="purple" fontSize="60" fontWeight="bold">{this.props.letter.toUpperCase()}</SvgText>
         </G>
     case 'incorrect':
-      if ( this.state.renderTempIncorrect )
-      {
+      if ( this.state.renderTempIncorrect )      {
         return <G>
           <Rect height={height} width={width} fill="white" strokeWidth="0" />
           <Line x1="0" y1="0" x2={width} y2={height} stroke="red" strokeWidth="2" />
           <Line x1={width} y1="0" x2="0" y2={height} stroke="red" strokeWidth="2" />
         </G>
-      }
-      else
-      {
-        return <Rect height={height} width={width} fill="white" strokeWidth="2" stroke="black" />        
+      }      else      {
+        return <Rect height={height} width={width} fill="white" strokeWidth="2" stroke="black" />
       }
     }
   }
 
   render() {
-    var height = 100;
+    var height = 100
     console.log(styles.letterDropzone)
-    var width = 80;
+    var width = 80
     return <View style={styles.letterDropzone} ref="root" onLayout={this.onLayout}>
       <Svg height={height} width={width}>
       {this.renderInside()}
@@ -287,28 +272,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
-    marginTop: 50,
+    marginTop: 50
   },
   lettersContainer: {
     flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    alignItems: 'flex-start'
   },
   letterDropzone: {
     marginLeft: 2,
     marginRight: 2,
     height: 100,
-    width: 80,
+    width: 80
   },
   letterDropzonesContainer: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 50
   }
-});
+})
 
-AppRegistry.registerComponent('wordmatch', () => App);
+AppRegistry.registerComponent('wordmatch', () => App)

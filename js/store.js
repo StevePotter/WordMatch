@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === 'development') {
   middlewares.push(createLogger())
 }
 
-export default store = createStore(reducer,
+export default createStore(reducer,
   applyMiddleware(
     ...middlewares
   )

@@ -1,5 +1,5 @@
 import { createAction } from 'redux-actions'
-import words from "./words"
+import words from './words'
 
 export const wordChange = createAction('WORD_CHANGE')
 export const statusChange = createAction('STATUS_CHANGE')
@@ -12,8 +12,7 @@ export const wordCompleted = createAction('WORD_COMPLETED')
 export function resolveStatus() {
   return (dispatch, getState) => {
     const state = getState()
-    if (state.letterDrops.every((item) => item.status === 'correct'))
-    {
+    if (state.letterDrops.every((item) => item.status === 'correct'))    {
       return dispatch(wordCompleted())
     }
   }
@@ -25,9 +24,8 @@ export function chooseNewWord() {
 
     const currWord = state.word
     let newWord = currWord
-    while (newWord === currWord)
-    {
-      newWord = words[Math.floor(Math.random()*words.length)];
+    while (newWord === currWord)    {
+      newWord = words[Math.floor(Math.random()*words.length)]
     }
     dispatch(wordChange(newWord))
   }

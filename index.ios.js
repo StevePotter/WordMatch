@@ -1,1 +1,1 @@
-require("./js/root")
+require('./js/root')

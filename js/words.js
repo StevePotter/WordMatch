@@ -1,6 +1,6 @@
 export default [
-  "dog",
-  "cat",
-  "tree",
-  "ball"
+  'dog',
+  'cat',
+  'tree',
+  'ball'
 ]
