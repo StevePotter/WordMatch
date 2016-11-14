@@ -1,11 +1,17 @@
 import React, { Component, } from 'react';
 import { AppRegistry, Dimensions, StyleSheet, Text, View, StatusBar,PanResponder, Animated,NativeModules, UIManager, findNodeHandle } from 'react-native'
-import RN from 'react-native'
+import { connect, Provider } from 'react-redux'
 import Svg, { Text as SvgText, Rect} from 'react-native-svg'
-const letters = 'abcdefghijklmnopqrstuvwxyz'.split('')
-console.log(UIManager)
+import Rectangle from 'rectangle-node'//http://rahatah.me/rectangle-node/
+import store from "./store"
+import {wordChange as wordChangeAction} from "./actions"
 
-let word = "dog"
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('')
+
+store.dispatch(wordChangeAction("dog"))
+dropzones = []
+
+
 
 class Letter extends Component {
   render() {
@@ -15,39 +21,49 @@ class Letter extends Component {
   }
 }
 
-class LetterReceiver extends Component
+
+//props: letter, index, dropzone, onLayoutChanged
+//status: empty, filled, highlighted
+class LetterDropzone extends Component
 {
-//  mixins: [NativeMethodsMixin]
   onLayout = ({nativeEvent}) =>
   {
     var view = this.refs['root'];
     var handle = findNodeHandle(view);
     UIManager.measure(handle, (x,y,width,height,pageX,pageY) =>
     {
-      console.log(`Letter receiver ${pageX}, ${pageY}, ${width}, ${height}`)
+      dropzones[this.props.index] = new Rectangle(pageX,pageY, width, height);
+//      console.log(`Letter receiver ${pageX}, ${pageY}, ${width}, ${height}`)
     });
-//    console.log("As")
-//    console.log(nativeEvent)
   }
 
-  // onLayout = ({nativeEvent: { layout: {x, y, width, height}}}) =>
-  // {
-  //   console.log("Asdf")
-  //   console.log(x)
-  // }
-
+  renderInside()
+  {
+    if (this.props.status === 'empty')
+    {
+      return <Rect height="100" width="80" fill="white" strokeWidth="2" stroke="black">
+        </Rect>
+    }
+    if (this.props.status === 'highlighted')
+    {
+      return <Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red">
+        </Rect>
+    }
+    if (this.props.status === 'correct')
+    {
+      return <Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red">
+          <SvgText stroke="purple" fontSize="20" fontWeight="bold">{this.props.letter}</SvgText>
+        </Rect>
+    }
+        
+  }
 
   render() {
-    // console.log(RCTUIManager)
-    // console.log(this.measure)
-    // RCTUIManager.measure(findNodeHandle(this), (x,y,width,height,pageX,pageY) =>
-    // {
-    //   console.log(`Letter receiver ${pageX}, ${pageY}, ${width}, ${height}`)
-    // }
-//    );
-    return (
-     <View ref="root" height={100} width={80} onLayout={this.onLayout}><Svg height="100" width="80"><Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red"><SvgText stroke="purple" fontSize="20" fontWeight="bold"></SvgText></Rect></Svg></View>
-    )
+    return <View ref="root" height={100} width={80} onLayout={this.onLayout}>
+      <Svg height="100" width="80">
+      {this.renderInside()}
+      </Svg>
+    </View>
   }
 }
 
@@ -72,12 +88,25 @@ class DraggableView extends React.Component {
   //    pan: new Animated.ValueXY(), // inits to zero
   //  };
     this.state.panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      
+      onStartShouldSetPanResponder: () => {
+        console.log(dropzones);
+        return true
+      },      
       onPanResponderMove: (evt, gestureState) => {
+        //https://facebook.github.io/react-native/docs/panresponder.html
         let dx = gestureState.dx
         let dy = gestureState.dy
-        //console.log("Move: ", gestureState);
+        let pointerX = gestureState.x0 + gestureState.dx;
+        let pointerY = gestureState.y0 + gestureState.dy;
+//        console.log(`pointer ${pointerX}, ${pointerY}  ${dropzones.length}`);
+        for(let i = 0; i < dropzones.length; i++)
+        {
+          var zone = dropzones[i];
+          if (zone.contains(pointerX, pointerY))
+          {
+            console.log("mouse pointer in drop zone!")
+          }
+        }
         
         const panState = {
           absoluteChangeX: this.lastX + dx,
@@ -128,26 +157,54 @@ class DraggableView extends React.Component {
   }
 }
 
-export default class wordmatch extends Component {
+class WordMatchUI extends Component {
   render() {
     return (
-      <View style={styles.container}>
-        <View style={styles.lettersContainer}>
-          {letters.map(letter => (
-            <DraggableView key={letter}>
-            <Letter value={letter} />
-            </DraggableView>
-          ))}
+        <View style={styles.container}>
+          <View style={styles.lettersContainer}>
+            {letters.map(letter => (
+              <DraggableView key={letter}>
+              <Letter value={letter} />
+              </DraggableView>
+            ))}
+          </View>
+          <View style={styles.LetterDropzonesContainer}>
+            {this.props.letterDrops.map((value) => (
+              <LetterDropzone letter={value.letter} key={value.index} index={value.index} status={value.status} />
+            ))}
+          </View>
         </View>
-        <View style={styles.letterReceiversContainer}>
-          {word.split("").map(letter => (
-            <LetterReceiver value={letter} key={letter} />
-          ))}
-        </View>
-      </View>
     );
   }
 }
+
+const mapStateToProps = state => ({ letterDrops: state.letterDrops })
+const WordMatch = connect(
+  mapStateToProps,
+  null
+)(WordMatchUI)
+
+
+class App extends Component {
+  render() {
+    return (
+      <Provider store={store}>
+      <WordMatch />
+      </Provider>
+    );
+  }
+}
+// const mapDispatchToProps = dispatch => ({
+//   onSocialSelect: (socialId) => {
+//     dispatch(newReleaseSelectSocial(socialId))
+//   },
+//   onDeselectSocial: (socialId) => {
+//     dispatch(newReleaseDeselectSocial(socialId))
+//   }
+// })
+
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -165,7 +222,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
-  letterReceiversContainer: {
+  LetterDropzonesContainer: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -174,4 +231,4 @@ const styles = StyleSheet.create({
   }
 });
 
-AppRegistry.registerComponent('wordmatch', () => wordmatch);
+AppRegistry.registerComponent('wordmatch', () => App);

@@ -9,7 +9,12 @@
   "dependencies": {
     "react": "15.3.2",
     "react-native": "0.37.0",
-    "react-native-svg": "^4.3.2"
+    "react-native-svg": "^4.3.2",
+    "react-redux": "^4.4.5",
+    "rectangle-node": "^0.1.0",
+    "redux": "^3.6.0",
+    "redux-actions": "^0.13.0",
+    "redux-logger": "^2.7.4"
   },
   "jest": {
     "preset": "jest-react-native"
