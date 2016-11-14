@@ -1,5 +1,5 @@
 import React, { Component, } from 'react';
-import { AppRegistry, Dimensions, StyleSheet, Text, View, StatusBar,PanResponder, Animated,NativeModules, UIManager, findNodeHandle } from 'react-native'
+import { AppRegistry, Dimensions, StyleSheet, Button, Text, View, StatusBar,PanResponder, Animated, UIManager, findNodeHandle } from 'react-native'
 import { connect, Provider } from 'react-redux'
 import Svg, { Text as SvgText, Rect, G, Line} from 'react-native-svg'
 import Rectangle from 'rectangle-node'//http://rahatah.me/rectangle-node/
@@ -9,9 +9,10 @@ import {wordChange as wordChangeAction, setDropZoneBounds as setDropZoneBoundsAc
   moveOutsideDropZone as moveOutsideDropZoneAction,
   resolveStatus as resolveStatusAction,
   releaseDropZone as releaseDropZoneAction } from "./actions"
+import Speech from "react-native-speech"
+import eachSeries from 'async/eachSeries'
 
-
-store.dispatch(wordChangeAction("dog"))
+store.dispatch(wordChangeAction("dogs"))
 
 /*
 Root app entry
@@ -52,11 +53,29 @@ const RootScreen = connect(
 )(RootScreenUI)
 
 
-
 /*
 Main screen for the game, where you drag the letters of a word into their proper place
 */
 class WordMatchUI extends Component {
+  componentWillMount() {
+    this.sayWord()
+  }
+
+  sayWord = () => {
+    Speech.isSpeaking().then(speaking => {
+      if (speaking)
+        return;
+      let parts = this.props.word.split("")
+      parts.unshift(this.props.word)   
+      const sentence = parts.join("...")
+      Speech.speak({
+        text: sentence,
+        voice: 'en-US'
+      })
+
+    });
+  }
+
   render() {
     const letters = 'abcdefghijklmnopqrstuvwxyz'.split('')
     return (
@@ -65,6 +84,9 @@ class WordMatchUI extends Component {
           {letters.map(letter => (
             <DraggableLetter key={letter} letter={letter} />
           ))}
+        </View>
+        <View style={styles.playSoundContainer}>
+          <Button title="Repeat" onPress={this.sayWord} />
         </View>
         <View style={styles.letterDropzonesContainer}>
           {this.props.letterDrops.map((value) => (
@@ -76,7 +98,7 @@ class WordMatchUI extends Component {
   }
 }
 const WordMatch = connect(
-  state => ({ letterDrops: state.letterDrops }),
+  state => ({ letterDrops: state.letterDrops, word: state.word }),
   null
 )(WordMatchUI)
 
@@ -97,7 +119,7 @@ class DraggableLetterUI extends React.Component {
     for(let i = 0; i < dropzones.length; i++)
     {
       var zone = dropzones[i];
-      if (zone.bounds.contains(pointerX, pointerY))
+      if (zone.bounds && zone.bounds.contains(pointerX, pointerY))
       {
         return zone;
       }
@@ -242,12 +264,6 @@ class LetterDropzone extends Component
     </View>
   }
 }
-
-
-
-
-
-
 
 
 
