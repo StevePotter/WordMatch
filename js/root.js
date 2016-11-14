@@ -8,11 +8,11 @@ import {wordChange as wordChangeAction, setDropZoneBounds as setDropZoneBoundsAc
   moveInsideDropZone as moveInsideDropZoneAction, 
   moveOutsideDropZone as moveOutsideDropZoneAction,
   resolveStatus as resolveStatusAction,
+  chooseNewWord as chooseNewWordAction,
   releaseDropZone as releaseDropZoneAction } from "./actions"
 import Speech from "react-native-speech"
-import eachSeries from 'async/eachSeries'
 
-store.dispatch(wordChangeAction("dogs"))
+store.dispatch(chooseNewWordAction())
 
 /*
 Root app entry
@@ -35,15 +35,15 @@ class RootScreenUI extends Component {
     const status = this.props.status
     if (status === 'started')
     { 
-      return (<View><Text>started</Text></View>)
+      return <View></View>
     }
     if (status === 'playing')
     {
-      return (<WordMatch />)
+      return <WordMatch />
     }
     if (status === 'completed')
     {
-      return (<View style={styles.container}><Text>GREAT JOB!!!</Text></View>)
+      return <CompletedUI />
     }
   }
 }
@@ -52,6 +52,19 @@ const RootScreen = connect(
   null
 )(RootScreenUI)
 
+class CompletedUI extends Component
+{
+  newWord = () => {
+    store.dispatch(chooseNewWordAction())
+  }
+
+  render() {
+    return <View style={styles.container}>
+      <Text>GREAT JOB!!!</Text>
+      <Button title="Do Another" onPress={this.newWord} />
+    </View>
+  }
+}
 
 /*
 Main screen for the game, where you drag the letters of a word into their proper place
@@ -85,6 +98,7 @@ class WordMatchUI extends Component {
             <DraggableLetter key={letter} letter={letter} />
           ))}
         </View>
+        
         <View style={styles.playSoundContainer}>
           <Button title="Repeat" onPress={this.sayWord} />
         </View>
@@ -229,14 +243,12 @@ class LetterDropzone extends Component
     var width = 80;
     switch(this.props.status) {
     case 'empty':
-      return <Rect height={100} width={width} fill="white" strokeWidth="2" stroke="black">
-        </Rect>
+      return <Rect height={100} width={width} fill="white" strokeWidth="2" stroke="black"></Rect>
     case 'highlighted':
-      return <Rect height={height} width={width} fill="white" strokeWidth="2" stroke="red">
-        </Rect>
+      return <Rect height={height} width={width} fill="white" strokeWidth="2" stroke="red"></Rect>
     case 'correct':
       return <G><Rect height={height} width={width} fill="white" strokeWidth="0" stroke="red"></Rect>
-          <SvgText x="20" y="20" textAnchor="middle" stroke="purple" fontSize="40" fontWeight="bold">{this.props.letter.toUpperCase()}</SvgText>
+          <SvgText x="20" y="20" textAnchor="middle" stroke="purple" fontSize="60" fontWeight="bold">{this.props.letter.toUpperCase()}</SvgText>
         </G>
     case 'incorrect':
       if ( this.state.renderTempIncorrect )
@@ -256,6 +268,7 @@ class LetterDropzone extends Component
 
   render() {
     var height = 100;
+    console.log(styles.letterDropzone)
     var width = 80;
     return <View style={styles.letterDropzone} ref="root" onLayout={this.onLayout}>
       <Svg height={height} width={width}>
@@ -286,8 +299,8 @@ const styles = StyleSheet.create({
   letterDropzone: {
     marginLeft: 2,
     marginRight: 2,
-    height: 80,
-    width: 100,
+    height: 100,
+    width: 80,
   },
   letterDropzonesContainer: {
     flex: 1,

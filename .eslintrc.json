@@ -1,0 +1,73 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es6": true,
+        "jasmine": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:flowtype/recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "ecmaFeatures": {
+            "experimentalObjectRestSpread": true,
+            "jsx": true,
+            "classes": true
+        },
+        "sourceType": "module"
+    },
+    "parser": "babel-eslint",
+    "plugins": [
+        "flowtype",
+        "react",
+        "react-native"
+    ],
+    "rules": {
+        "indent": [
+            "error",
+            2
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "never"
+        ],
+        "brace-style": 2,
+        "no-trailing-spaces": 2,
+        "spaced-comment": 2,
+        "curly": 2,
+        "comma-dangle": 2,            // disallow trailing commas in object literals
+        "prefer-arrow-callback": 2,
+        "react-native/no-unused-styles": 2,
+        "react-native/split-platform-components": 2,
+        "react-native/no-inline-styles": 2,
+        "react-native/no-color-literals": 2,
+        "react/jsx-curly-spacing": 2,
+        "flowtype/require-valid-file-annotation": [
+          2,
+          "always"
+        ],
+        "object-curly-spacing": [
+            "error",
+            "always"
+        ],
+        "eqeqeq": [
+            "error",
+            "smart"
+        ],
+        "eol-last": [
+            "error",
+            "always"
+        ]
+    }
+}

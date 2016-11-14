@@ -7,7 +7,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "async": "^2.1.2",
     "react": "15.3.2",
     "react-native": "0.37.0",
     "react-native-speech": "^0.1.2",
