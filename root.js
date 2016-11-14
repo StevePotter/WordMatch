@@ -1,9 +1,9 @@
 import React, { Component, } from 'react';
-import { AppRegistry, Dimensions, StyleSheet, Text, View, StatusBar,PanResponder, Animated } from 'react-native';
+import { AppRegistry, Dimensions, StyleSheet, Text, View, StatusBar,PanResponder, Animated,NativeModules, UIManager, findNodeHandle } from 'react-native'
+import RN from 'react-native'
 import Svg, { Text as SvgText, Rect} from 'react-native-svg'
-
 const letters = 'abcdefghijklmnopqrstuvwxyz'.split('')
-
+console.log(UIManager)
 
 let word = "dog"
 
@@ -17,9 +17,36 @@ class Letter extends Component {
 
 class LetterReceiver extends Component
 {
+//  mixins: [NativeMethodsMixin]
+  onLayout = ({nativeEvent}) =>
+  {
+    var view = this.refs['root'];
+    var handle = findNodeHandle(view);
+    UIManager.measure(handle, (x,y,width,height,pageX,pageY) =>
+    {
+      console.log(`Letter receiver ${pageX}, ${pageY}, ${width}, ${height}`)
+    });
+//    console.log("As")
+//    console.log(nativeEvent)
+  }
+
+  // onLayout = ({nativeEvent: { layout: {x, y, width, height}}}) =>
+  // {
+  //   console.log("Asdf")
+  //   console.log(x)
+  // }
+
+
   render() {
+    // console.log(RCTUIManager)
+    // console.log(this.measure)
+    // RCTUIManager.measure(findNodeHandle(this), (x,y,width,height,pageX,pageY) =>
+    // {
+    //   console.log(`Letter receiver ${pageX}, ${pageY}, ${width}, ${height}`)
+    // }
+//    );
     return (
-     <Svg height="100" width="80"><Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red"><SvgText stroke="purple" fontSize="20" fontWeight="bold"></SvgText></Rect></Svg>
+     <View ref="root" height={100} width={80} onLayout={this.onLayout}><Svg height="100" width="80"><Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red"><SvgText stroke="purple" fontSize="20" fontWeight="bold"></SvgText></Rect></Svg></View>
     )
   }
 }
@@ -46,7 +73,12 @@ class DraggableView extends React.Component {
   //  };
     this.state.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (evt, { dx, dy }) => {
+      
+      onPanResponderMove: (evt, gestureState) => {
+        let dx = gestureState.dx
+        let dy = gestureState.dy
+        //console.log("Move: ", gestureState);
+        
         const panState = {
           absoluteChangeX: this.lastX + dx,
           absoluteChangeY: this.lastY + dy,
