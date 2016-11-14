@@ -14,7 +14,8 @@
     "rectangle-node": "^0.1.0",
     "redux": "^3.6.0",
     "redux-actions": "^0.13.0",
-    "redux-logger": "^2.7.4"
+    "redux-logger": "^2.7.4",
+    "redux-thunk": "^2.1.0"
   },
   "jest": {
     "preset": "jest-react-native"

@@ -1,6 +1,23 @@
 // @flow
 import { combineReducers } from 'redux'
 
+//  status: 'started' | 'playing' | 'completed'
+
+const initialStatusState: string = "started"
+
+const status = (state = initialStatusState, action) => {
+  switch (action.type) {
+  case 'WORD_CHANGE':
+    return 'playing'
+  case 'WORD_COMPLETED':
+    return 'completed'
+  case 'STATUS_CHANGE':
+    return action.payload
+  default:
+    return state
+  }
+}
+
 const initialWordState: string = ""
 
 const word = (state: string = initialWordState, action) => {
@@ -30,8 +47,10 @@ const letterDrops = (state: Array<LetterDropZoneState> = initialDropZones, actio
   case 'SET_DROPZONE_BOUNDS':
     state[action.payload.index].bounds = action.payload.bounds;
     return Array.from(state);
-  case 'RELEASE_DROPZONE_SUCCESS':
-    state[action.payload].status = 'correct';
+  case 'RELEASE_DROPZONE':
+    if (state[action.payload.index].status === 'correct')
+      return state
+    state[action.payload.index].status = action.payload.match ? 'correct' : 'incorrect'
     return Array.from(state);
   case 'MOVE_INSIDE_DROPZONE'://action.payload is hovered index
     var change = false;
@@ -81,6 +100,7 @@ const letterDrops = (state: Array<LetterDropZoneState> = initialDropZones, actio
 }
 
 export default combineReducers({
+  status,
   word,
   letterDrops
 })
