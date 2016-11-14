@@ -1,10 +1,13 @@
 import React, { Component, } from 'react';
 import { AppRegistry, Dimensions, StyleSheet, Text, View, StatusBar,PanResponder, Animated,NativeModules, UIManager, findNodeHandle } from 'react-native'
 import { connect, Provider } from 'react-redux'
-import Svg, { Text as SvgText, Rect} from 'react-native-svg'
+import Svg, { Text as SvgText, Rect, G} from 'react-native-svg'
 import Rectangle from 'rectangle-node'//http://rahatah.me/rectangle-node/
 import store from "./store"
-import {wordChange as wordChangeAction} from "./actions"
+import {wordChange as wordChangeAction, setDropZoneBounds as setDropZoneBoundsAction, 
+  moveInsideDropZone as moveInsideDropZoneAction, 
+  moveOutsideDropZone as moveOutsideDropZoneAction,
+  releaseDropZoneSuccess as releaseDropZoneSuccessAction } from "./actions"
 
 const letters = 'abcdefghijklmnopqrstuvwxyz'.split('')
 
@@ -32,8 +35,7 @@ class LetterDropzone extends Component
     var handle = findNodeHandle(view);
     UIManager.measure(handle, (x,y,width,height,pageX,pageY) =>
     {
-      dropzones[this.props.index] = new Rectangle(pageX,pageY, width, height);
-//      console.log(`Letter receiver ${pageX}, ${pageY}, ${width}, ${height}`)
+      store.dispatch(setDropZoneBoundsAction({index: this.props.index, bounds: new Rectangle(pageX,pageY, width, height)}))
     });
   }
 
@@ -51,11 +53,10 @@ class LetterDropzone extends Component
     }
     if (this.props.status === 'correct')
     {
-      return <Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red">
-          <SvgText stroke="purple" fontSize="20" fontWeight="bold">{this.props.letter}</SvgText>
-        </Rect>
-    }
-        
+      return <G><Rect height="100" width="80" fill="white" strokeWidth="2" stroke="red"></Rect>
+          <SvgText x="20" y="20" textAnchor="middle" stroke="purple" fontSize="40" fontWeight="bold">{this.props.letter.toUpperCase()}</SvgText>
+        </G>
+    }        
   }
 
   render() {
@@ -89,23 +90,30 @@ class DraggableView extends React.Component {
   //  };
     this.state.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => {
-        console.log(dropzones);
+//        console.log(dropzones);
         return true
       },      
       onPanResponderMove: (evt, gestureState) => {
         //https://facebook.github.io/react-native/docs/panresponder.html
         let dx = gestureState.dx
         let dy = gestureState.dy
+        const dropzones = store.getState().letterDrops;
         let pointerX = gestureState.x0 + gestureState.dx;
         let pointerY = gestureState.y0 + gestureState.dy;
-//        console.log(`pointer ${pointerX}, ${pointerY}  ${dropzones.length}`);
+        var inone = false;
         for(let i = 0; i < dropzones.length; i++)
         {
           var zone = dropzones[i];
-          if (zone.contains(pointerX, pointerY))
+          if (zone.bounds.contains(pointerX, pointerY))
           {
-            console.log("mouse pointer in drop zone!")
+            store.dispatch(moveInsideDropZoneAction(i))
+            inone = true;
+            break;
           }
+        }
+        if (!inone)
+        {
+          store.dispatch(moveOutsideDropZoneAction())
         }
         
         const panState = {
@@ -126,11 +134,39 @@ class DraggableView extends React.Component {
       //   dx: this.state.pan.x, // x,y are Animated.Value
       //   dy: this.state.pan.y,
       // }]),
-      onPanResponderRelease: () => {
-        Animated.spring(
-          this.state.pan,         // Auto-multiplexed
-          {toValue: {x: 0, y: 0}} // Back to zero
-        ).start();
+      onPanResponderRelease: (evt, gestureState) => {
+        console.log(this.props.letter);
+        //https://facebook.github.io/react-native/docs/panresponder.html
+        let dx = gestureState.dx
+        let dy = gestureState.dy
+        const dropzones = store.getState().letterDrops;
+        let pointerX = gestureState.x0 + gestureState.dx;
+        let pointerY = gestureState.y0 + gestureState.dy;
+        var inone = false;
+        for(let i = 0; i < dropzones.length; i++)
+        {
+          var zone = dropzones[i];
+          if (zone.bounds.contains(pointerX, pointerY))
+          {
+            if (zone.letter === this.props.letter)
+            {
+              inone = true;
+              store.dispatch(releaseDropZoneSuccessAction(i))
+              this.state.pan.setValue({
+                x: 0,
+                y: 0,
+              });           
+            }//todo: error when wrong letter
+            break;
+          }
+        }
+        if (!inone)
+        {
+          Animated.spring(
+            this.state.pan,         // Auto-multiplexed
+            {toValue: {x: 0, y: 0}} // Back to zero
+          ).start();
+        }
       },
     });
   }
@@ -163,7 +199,7 @@ class WordMatchUI extends Component {
         <View style={styles.container}>
           <View style={styles.lettersContainer}>
             {letters.map(letter => (
-              <DraggableView key={letter}>
+              <DraggableView key={letter} letter={letter}>
               <Letter value={letter} />
               </DraggableView>
             ))}

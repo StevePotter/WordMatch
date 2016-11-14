@@ -29,7 +29,52 @@ const letterDrops = (state: Array<LetterDropZoneState> = initialDropZones, actio
     })
   case 'SET_DROPZONE_BOUNDS':
     state[action.payload.index].bounds = action.payload.bounds;
-    return Object.assign({}, state);
+    return Array.from(state);
+  case 'RELEASE_DROPZONE_SUCCESS':
+    state[action.payload].status = 'correct';
+    return Array.from(state);
+  case 'MOVE_INSIDE_DROPZONE'://action.payload is hovered index
+    var change = false;
+    for (var i = 0; i < state.length; i++)
+    {
+      const zone = state[i];
+      if (zone.index === action.payload)
+      {
+        if (zone.status === 'empty' || zone.status === 'incorrect')
+        {
+          zone.status = 'highlighted'
+          change = true;
+        }
+      }
+      else
+      {
+        if (zone.status === 'highlighted')
+        {
+          zone.status = 'empty'
+          change = true
+        }
+      }
+    }
+    if (change)
+      return Array.from(state);
+    else
+      return state;
+  case 'MOVE_OUTSIDE_DROPZONE':
+    var change = false;
+    for (var i = 0; i < state.length; i++)
+    {
+      const zone = state[i];
+      if (zone.status === 'highlighted')
+      {
+        zone.status = 'empty'
+        change = true
+      }
+    }
+    if (change)
+      return Array.from(state);
+    else
+      return state;
+
   default:
     return state
   }
